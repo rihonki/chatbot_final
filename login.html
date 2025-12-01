@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nana's bigbeta智能聊天室 - 登录</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+        
+        .login-container {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .login-container:hover {
+            transform: translateY(-5px);
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo h1 {
+            font-size: 28px;
+            color: #667eea;
+            font-weight: 700;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        input,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5ee;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .success-message {
+            background: #efe;
+            color: #3a3;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .toggle-mode {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #667eea;
+            cursor: pointer;
+        }
+        
+        .toggle-mode:hover {
+            text-decoration: underline;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+            color: #667eea;
+        }
+        
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 30px 20px;
+            }
+            
+            .logo h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <h1>Nana's bigbeta</h1>
+            <p style="color: #777; margin-top: 8px;">智能聊天室</p>
+        </div>
+        
+        <div class="error-message" id="error-message"></div>
+        
+        <div id="login-mode">
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-username">用户名</label>
+                    <input type="text" id="login-username" placeholder="请输入您的用户名" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="login-password">密码</label>
+                    <input type="password" id="login-password" placeholder="请输入您的密码" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="login-server">选择服务器</label>
+                    <div style="display: flex; gap: 5px; align-items: center; width: 100%; max-width: 100%;">
+                        <select id="login-server" required style="padding: 4px; border: 1px solid #e1e5ee; border-radius: 4px; font-size: 12px; min-width: 120px;">
+                            <option value="{\"host\":\"localhost\",\"port\":8888}">默认服务器 (localhost:8888)</option>
+                            <option value="">加载中...</option>
+                        </select>
+                        <button type="button" id="refresh-server-btn" style="padding: 3px 12px; background: #f0f0f0; border: 1px solid #e1e5ee; border-radius: 4px; cursor: pointer; flex: 1; display: flex; align-items: center; justify-content: center; font-size: 14px; height: 32px;">
+                            🔄 刷新
+                        </button>
+                    </div>
+                </div>
+                
+                <button type="submit">登录</button>
+                
+                <div class="toggle-mode" onclick="switchToRegister()">
+                    还没有账号？立即注册
+                </div>
+            </form>
+        </div>
+        
+        <div id="register-mode" style="display: none;">
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="register-username">用户名</label>
+                    <input type="text" id="register-username" placeholder="请设置您的用户名" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="register-password">密码</label>
+                    <input type="password" id="register-password" placeholder="请设置您的密码" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="register-confirm-password">确认密码</label>
+                    <input type="password" id="register-confirm-password" placeholder="请再次输入密码" required>
+                </div>
+                
+                <button type="submit">注册</button>
+                
+                <div class="toggle-mode" onclick="switchToLogin()">
+                    已有账号？返回登录
+                </div>
+            </form>
+        </div>
+        
+        <div class="success-message" id="success-message"></div>
+        <div class="loading" id="loading">正在处理...</div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            const loginUsernameInput = document.getElementById('login-username');
+            const loginPasswordInput = document.getElementById('login-password');
+            const loginServerSelect = document.getElementById('login-server');
+            const registerUsernameInput = document.getElementById('register-username');
+            const registerPasswordInput = document.getElementById('register-password');
+            const registerConfirmPasswordInput = document.getElementById('register-confirm-password');
+            const errorMessage = document.getElementById('error-message');
+            const successMessage = document.getElementById('success-message');
+            const loading = document.getElementById('loading');
+            
+            // 加载配置文件中的服务器列表
+            function loadServerList() {
+                // 保留默认选项，只添加其他服务器
+                fetch('/config')
+                    .then(response => response.json())
+                    .then(config => {
+                        // 清除所有选项，然后重新创建默认选项
+                        loginServerSelect.innerHTML = '';
+                        
+                        // 创建并添加默认选项
+                        const defaultOption = document.createElement('option');
+                        defaultOption.value = JSON.stringify({host: 'localhost', port: 8888});
+                        defaultOption.textContent = '默认服务器 (localhost:8888)';
+                        loginServerSelect.appendChild(defaultOption);
+                        
+                        // 添加其他服务器（跳过默认服务器）
+                        config.servers.forEach(server => {
+                            if (!(server.host === 'localhost' && server.port === 8888)) {
+                                const option = document.createElement('option');
+                                option.value = JSON.stringify({
+                                    host: server.host,
+                                    port: server.port
+                                });
+                                option.textContent = `${server.name} (${server.host}:${server.port})`;
+                                loginServerSelect.appendChild(option);
+                            }
+                        });
+                    })
+                    .catch(error => {
+                        console.error('加载配置失败:', error);
+                        // 确保默认选项存在
+                        loginServerSelect.innerHTML = '';
+                        const defaultOption = document.createElement('option');
+                        defaultOption.value = JSON.stringify({host: 'localhost', port: 8888});
+                        defaultOption.textContent = '默认服务器 (localhost:8888)';
+                        loginServerSelect.appendChild(defaultOption);
+                    });
+            }
+            
+            // 初始加载服务器列表
+            loadServerList();
+            
+            // 刷新按钮点击事件
+            document.getElementById('refresh-server-btn').addEventListener('click', function() {
+                showError('正在刷新服务器列表...');
+                loadServerList();
+            });
+            
+            // 登录表单提交
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const username = loginUsernameInput.value.trim();
+                const password = loginPasswordInput.value.trim();
+                const serverJson = loginServerSelect.value;
+                
+                if (!username || !password || !serverJson) {
+                    showError('请填写所有必填项');
+                    return;
+                }
+                
+                showLoading();
+                
+                // 发送登录请求到服务器
+                fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({username, password})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    hideLoading();
+                    if (data.success) {
+                        const server = JSON.parse(serverJson);
+                        
+                        // 存储用户信息到本地存储
+                        localStorage.setItem('username', username);
+                        localStorage.setItem('password', password); // 存储密码用于WebSocket验证
+                        localStorage.setItem('server', serverJson);
+                        localStorage.setItem('authenticated', 'true');
+                        
+                        // 跳转到聊天页面
+                        window.location.href = '/chat';
+                    } else {
+                        showError(data.message || '登录失败，请检查用户名和密码');
+                    }
+                })
+                .catch(error => {
+                    hideLoading();
+                    showError('登录失败，请稍后重试');
+                    console.error('Login error:', error);
+                });
+            });
+            
+            // 注册表单提交
+            registerForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const username = registerUsernameInput.value.trim();
+                const password = registerPasswordInput.value.trim();
+                const confirmPassword = registerConfirmPasswordInput.value.trim();
+                
+                if (!username || !password || !confirmPassword) {
+                    showError('请填写所有必填项');
+                    return;
+                }
+                
+                if (password !== confirmPassword) {
+                    showError('两次输入的密码不一致');
+                    return;
+                }
+                
+                // 检查用户名是否合法
+                if (username.length < 3 || username.length > 20) {
+                    showError('用户名长度应在3-20个字符之间');
+                    return;
+                }
+                
+                // 检查密码是否合法
+                if (password.length < 6) {
+                    showError('密码长度至少为6个字符');
+                    return;
+                }
+                
+                showLoading();
+                
+                // 发送注册请求到服务器
+                fetch('/api/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({username, password})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    hideLoading();
+                    if (data.success) {
+                        showSuccess('注册成功！请登录');
+                        // 切换到登录页面
+                        setTimeout(() => {
+                            switchToLogin();
+                        }, 2000);
+                    } else {
+                        showError(data.message || '注册失败，请稍后重试');
+                    }
+                })
+                .catch(error => {
+                    hideLoading();
+                    showError('注册失败，请稍后重试');
+                    console.error('Register error:', error);
+                });
+            });
+            
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorMessage.style.display = 'block';
+                successMessage.style.display = 'none';
+                setTimeout(() => {
+                    errorMessage.style.display = 'none';
+                }, 3000);
+            }
+            
+            function showSuccess(message) {
+                successMessage.textContent = message;
+                successMessage.style.display = 'block';
+                errorMessage.style.display = 'none';
+            }
+            
+            function showLoading() {
+                loading.style.display = 'block';
+            }
+            
+            function hideLoading() {
+                loading.style.display = 'none';
+            }
+        });
+        
+        // 切换到注册模式
+        function switchToRegister() {
+            document.getElementById('login-mode').style.display = 'none';
+            document.getElementById('register-mode').style.display = 'block';
+        }
+        
+        // 切换到登录模式
+        function switchToLogin() {
+            document.getElementById('register-mode').style.display = 'none';
+            document.getElementById('login-mode').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

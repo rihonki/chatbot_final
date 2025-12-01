@@ -1,0 +1,2180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nana's bigbeta智能聊天室</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #f5f7fa;
+            overflow: hidden;
+        }
+        
+        .chat-container {
+            display: flex;
+            height: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            background: white;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* 侧边栏 - 用户列表 */
+        .sidebar {
+            width: 210px;
+            background: #2c3e50;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #34495e;
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #34495e;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .sidebar-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .logout-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.2s;
+        }
+        
+        .logout-btn:hover {
+            background: #c0392b;
+        }
+        
+        .search-bar {
+            padding: 15px;
+            border-bottom: 1px solid #34495e;
+        }
+        
+        .search-bar input {
+            width: 100%;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 20px;
+            background: #34495e;
+            color: white;
+            font-size: 14px;
+        }
+        
+        .search-bar input::placeholder {
+            color: #bdc3c7;
+        }
+        
+        .user-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 0;
+        }
+        
+        .user-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .user-item:hover {
+            background: #34495e;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            margin-right: 12px;
+        }
+        
+        .user-info {
+            flex: 1;
+        }
+        
+        .user-name {
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .user-status {
+            font-size: 12px;
+            color: #bdc3c7;
+            margin-top: 2px;
+        }
+        
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #2ecc71;
+            margin-left: 8px;
+        }
+        
+        .status-indicator.offline {
+            background: #95a5a6;
+        }
+        
+        /* 主聊天区域 */
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f8f9fa;
+        }
+        
+        .chat-header {
+            padding: 20px;
+            background: white;
+            border-bottom: 1px solid #e1e5ee;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .chat-header h2 {
+            font-size: 18px;
+            color: #2c3e50;
+        }
+        
+        .message-count {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-top: 4px;
+        }
+        
+        .message-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .message {
+            margin-bottom: 16px;
+            max-width: 70%;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .message.own {
+            align-self: flex-end;
+        }
+        
+        .message.other {
+            align-self: flex-start;
+        }
+        
+        .message-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 6px;
+            font-size: 12px;
+        }
+        
+        .message-username {
+            font-weight: 600;
+            color: #34495e;
+            margin-right: 8px;
+        }
+        
+        .message-time {
+            color: #95a5a6;
+        }
+        
+        .message-content {
+            background: white;
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            line-height: 1.4;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .video-container {
+            margin-top: 10px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .message.other .message-content {
+            background-color: #f0f8ff;
+            border-left: 4px solid #4a90e2;
+        }
+        
+        .message.own .message-content {
+            background: #667eea;
+            color: white;
+        }
+        
+        .system-message {
+            align-self: center;
+            margin: 16px 0;
+            background: #ecf0f1;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+        
+        /* 新闻卡片样式 */
+        .news-message {
+            max-width: 90%;
+            margin: 16px auto;
+        }
+        
+        .news-card {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .news-card-header {
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        
+        .news-card-header h3 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .news-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .news-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+        }
+        
+        .news-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .news-rank {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            background-color: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        
+        /* 前三名特殊颜色 */
+        .news-item:nth-child(1) .news-rank {
+            background-color: #e74c3c; /* 红色 */
+        }
+        
+        .news-item:nth-child(2) .news-rank {
+            background-color: #3498db; /* 蓝色 */
+        }
+        
+        .news-item:nth-child(3) .news-rank {
+            background-color: #2ecc71; /* 绿色 */
+        }
+        
+        .news-title {
+            flex: 1;
+            font-size: 14px;
+            line-height: 1.4;
+            color: #34495e;
+        }
+        
+        .news-heat {
+            font-size: 12px;
+            color: #e74c3c;
+            font-weight: 500;
+            margin-left: 8px;
+            flex-shrink: 0;
+        }
+        }
+        
+        /* 输入区域 - 现代化设计 */
+        .input-area {
+            background: #f8f9fa;
+            padding: 12px 16px;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            border-radius: 0 0 16px 16px;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .buttons-top {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .input-send-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+        
+        .message-input-container {
+            flex: 1;
+        }
+        
+        /* 移除了input-left-group，所有元素直接在input-area中 */
+        
+        .emoji-btn,
+        .robot-btn,
+        .movie-btn,
+        .music-btn,
+        .news-btn,
+        .weather-btn {
+            background: white;
+            border: 1px solid #dee2e6;
+            color: #495057;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 8px 10px;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .emoji-btn:hover,
+        .robot-btn:hover,
+        .movie-btn:hover,
+        .music-btn:hover,
+        .news-btn:hover,
+        .weather-btn:hover {
+            background: #6c5ce7;
+            color: white;
+            border-color: #6c5ce7;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(108, 92, 231, 0.3);
+        }
+        
+        .message-input {
+            width: 100%;
+            padding: 14px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 28px;
+            font-size: 15px;
+            resize: none;
+            height: 50px;
+            max-height: 140px;
+            overflow-y: auto;
+            font-family: inherit;
+            min-height: 50px;
+            background: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .message-input:focus {
+            outline: none;
+            border-color: #6c5ce7;
+            box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        .send-btn {
+            background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 15px;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(108, 92, 231, 0.3);
+            min-width: 80px;
+        }
+        
+        .send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(108, 92, 231, 0.4);
+            background: linear-gradient(135deg, #5f3dc4 0%, #9b8fff 100%);
+        }
+        
+        .send-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(108, 92, 231, 0.3);
+        }
+        
+        .send-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* 提示信息 */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #3498db;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+            animation: slideIn 0.3s ease;
+            z-index: 1000;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        
+        .notification.error {
+            background: #e74c3c;
+        }
+        
+        .notification.success {
+            background: #2ecc71;
+        }
+        
+        /* 表情选择器 */
+        .emoji-panel {
+            position: absolute;
+            bottom: 80px;
+            left: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            padding: 15px;
+            display: none;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 10px;
+        }
+        
+        .emoji-panel.show {
+            display: grid;
+        }
+        
+        .emoji-item {
+            font-size: 20px;
+            cursor: pointer;
+            text-align: center;
+            padding: 5px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        
+        .emoji-item:hover {
+            background: #f5f7fa;
+        }
+        
+        /* 历史记录按钮样式 */
+        .history-btn {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: transform 0.2s;
+        }
+        
+        .history-btn:hover {
+            transform: translateY(-50%) scale(1.05);
+        }
+        
+        /* 历史消息面板样式 */
+        .history-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100vh;
+            background: white;
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            transition: right 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .history-panel.show {
+            right: 0;
+        }
+        
+        .history-header {
+            padding: 20px;
+            background: #2c3e50;
+            color: white;
+        }
+        
+        .history-title-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .history-title-container h3 {
+            font-size: 18px;
+            margin: 0;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+        
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .history-filters {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .history-filters input,
+        .history-filters select {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .history-filters input {
+            flex: 1;
+            background: #34495e;
+            color: white;
+        }
+        
+        .history-filters input::placeholder {
+            color: #bdc3c7;
+        }
+        
+        .history-filters select {
+            background: #34495e;
+            color: white;
+            cursor: pointer;
+        }
+        
+        .history-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        
+        .history-message {
+            margin-bottom: 16px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .history-message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .history-message-username {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+        
+        .history-message-time {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+        
+        .history-message-content {
+            font-size: 14px;
+            color: #34495e;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+        
+        .history-message-system {
+            text-align: center;
+            margin: 16px 0;
+        }
+        
+        .history-message-system .system-content {
+            display: inline-block;
+            background: #ecf0f1;
+            color: #7f8c8d;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+        }
+        
+        .history-footer {
+            padding: 15px 20px;
+            background: white;
+            border-top: 1px solid #e1e5ee;
+            text-align: center;
+        }
+        
+        .load-more-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: transform 0.2s;
+        }
+        
+        .load-more-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+        
+        .load-more-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .loading-message {
+            text-align: center;
+            color: #7f8c8d;
+            padding: 40px 0;
+        }
+        
+        .no-messages {
+            text-align: center;
+            color: #7f8c8d;
+            padding: 60px 0;
+            font-size: 14px;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+                position: fixed;
+                left: 0;
+                top: 0;
+                height: 100%;
+                z-index: 100;
+            }
+            
+            .sidebar.show {
+                display: flex;
+            }
+            
+            .chat-header {
+                position: relative;
+            }
+            
+            .menu-toggle {
+                position: absolute;
+                left: 20px;
+                top: 50%;
+                transform: translateY(-50%);
+                background: none;
+                border: none;
+                color: #2c3e50;
+                font-size: 20px;
+                cursor: pointer;
+            }
+            
+            .history-btn {
+                right: 60px;
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+            
+            .message {
+                max-width: 85%;
+            }
+            
+            .history-panel {
+                width: 100%;
+                right: -100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <!-- 侧边栏 - 用户列表 -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>在线用户</h2>
+                <button class="logout-btn" id="logout-btn">退出</button>
+            </div>
+            
+            <div class="search-bar">
+                <input type="text" placeholder="搜索用户...">
+            </div>
+            
+            <div class="user-list" id="user-list">
+                <!-- 用户列表将通过JavaScript动态生成 -->
+            </div>
+        </div>
+        
+        <!-- 主聊天区域 -->
+        <div class="chat-main">
+            <div class="chat-header">
+                <button class="menu-toggle" id="menu-toggle">☰</button>
+                <h2>Nana's bigbeta智能聊天室</h2>
+                <div class="message-count">欢迎加入聊天室！</div>
+                <button id="historyBtn" class="history-btn">历史记录</button>
+            </div>
+            
+            <div class="message-container" id="message-container">
+                <!-- 消息将通过JavaScript动态生成 -->
+            </div>
+            
+            <div class="input-area">
+                <!-- 功能按钮区域 - 三个按钮在textarea上方 -->
+                <div class="buttons-top">
+                    <button class="emoji-btn" id="emoji-btn">😃</button>
+                    <button class="robot-btn" id="robot-btn">🤖</button>
+                    <button class="movie-btn" id="movie-btn">🎬</button>
+                    <button class="music-btn" id="music-btn">🎵</button>
+                    <button class="news-btn" id="news-btn">📰</button>
+                    <button class="weather-btn" id="weather-btn">🌤️</button>
+                </div>
+                <!-- 输入和发送区域 - textarea和发送按钮在同一行 -->
+                <div class="input-send-container">
+                    <div class="message-input-container">
+                        <textarea class="message-input" id="message-input" placeholder="输入消息..." style="height: 44px;"></textarea>
+                        <!-- @提示面板 -->
+                        <div class="at-suggestions" id="at-suggestions">
+                            <!-- 提示内容将通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+                    <button class="send-btn" id="send-btn">发送</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 表情选择器</div>
+    
+    <div class="emoji-panel" id="emoji-panel">
+        <!-- 表情符号将通过JavaScript动态生成 -->
+    </div>
+    
+    <!-- 历史消息面板 -->
+    <div id="historyPanel" class="history-panel">
+        <div class="history-header">
+            <div class="history-title-container">
+                <h3>历史消息</h3>
+                <button id="historyClose" class="close-btn">×</button>
+            </div>
+            <div class="history-filters">
+                <input type="text" id="historySearch" placeholder="搜索消息..." />
+                <select id="historyUserFilter">
+                    <option value="">所有用户</option>
+                </select>
+            </div>
+        </div>
+        <div id="historyContainer" class="history-container">
+            <div class="loading-message">加载历史消息中...</div>
+        </div>
+        <div class="history-footer">
+            <button id="loadMoreHistory" class="load-more-btn">加载更多</button>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const username = localStorage.getItem('username');
+            const serverJson = localStorage.getItem('server');
+            
+            if (!username || !serverJson) {
+                window.location.href = '/';
+                return;
+            }
+            
+            const server = JSON.parse(serverJson);
+            let ws = null;
+            let emojis = [];
+            
+            // 获取DOM元素
+            const messageContainer = document.getElementById('message-container');
+            const messageInput = document.getElementById('message-input');
+            const sendBtn = document.getElementById('send-btn');
+            const userList = document.getElementById('user-list');
+            const logoutBtn = document.getElementById('logout-btn');
+            const emojiBtn = document.getElementById('emoji-btn');
+            const emojiPanel = document.getElementById('emoji-panel');
+            const menuToggle = document.getElementById('menu-toggle');
+            const sidebar = document.getElementById('sidebar');
+            const atSuggestions = document.getElementById('at-suggestions');
+            const movieBtn = document.getElementById('movie-btn');
+            const musicBtn = document.getElementById('music-btn');
+            const newsBtn = document.getElementById('news-btn');
+            const weatherBtn = document.getElementById('weather-btn');
+            
+            // 定义@命令提示数据
+            const atCommands = [
+            { command: '@电影', description: 'url - 解析电影链接' },
+            { command: '@张兵', description: '发起AI聊天' },
+            { command: '@天气', description: '城市 - 查询天气信息' },
+            { command: '@音乐', description: '随机播放音乐' },
+            { command: '@新闻', description: '获取百度热搜前十条' }
+        ];
+            
+            // 加载配置文件，获取表情列表
+            fetch('/config')
+                .then(response => response.json())
+                .then(config => {
+                    emojis = config.emojis;
+                    renderEmojiPanel();
+                });
+            
+            // 渲染表情面板
+            function renderEmojiPanel() {
+                emojis.forEach(emoji => {
+                    const emojiItem = document.createElement('div');
+                    emojiItem.className = 'emoji-item';
+                    emojiItem.textContent = emoji.trim();
+                    emojiItem.addEventListener('click', () => {
+                        messageInput.value += emoji.trim();
+                        emojiPanel.classList.remove('show');
+                    });
+                    emojiPanel.appendChild(emojiItem);
+                });
+            }
+            
+            // 连接WebSocket
+            function connectWebSocket() {
+                const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsUrl = `${wsProtocol}//${server.host}:${server.port}/ws`;
+                
+                ws = new WebSocket(wsUrl);
+                console.log('正在连接WebSocket:', wsUrl);
+                
+                ws.onopen = function() {
+                    console.log('WebSocket连接已建立');
+                    // 从localStorage获取密码
+                    const password = localStorage.getItem('password');
+                    // 发送登录信息，包含用户名和密码
+                    ws.send(JSON.stringify({
+                        type: 'login',
+                        username: username,
+                        password: password
+                    }));
+                    console.log('已发送登录信息，包含用户名和密码');
+                };
+                
+                ws.onmessage = function(event) {
+                    console.log('收到WebSocket消息:', event.data);
+                    try {
+                        const data = JSON.parse(event.data);
+                        console.log('解析后的消息数据:', data);
+                        console.log('消息类型:', data.type);
+                        console.log('消息内容:', data.content || '无内容');
+                        console.log('用户名:', data.username || '无用户名');
+                        console.log('成功标志:', data.success);
+                    
+                    switch(data.type) {
+                        case 'login_response':
+                            console.log('处理登录响应:', data);
+                            if (data.success) {
+                                console.log('登录成功，用户列表:', data.online_users);
+                                showNotification(data.message || '登录成功！', 'success');
+                                updateUserList(data.online_users);
+                            } else {
+                                console.log('登录失败:', data.message);
+                                showNotification(data.message, 'error');
+                                setTimeout(() => {
+                                    localStorage.clear();
+                                    window.location.href = '/';
+                                }, 2000);
+                            }
+                            break;
+                        case 'message':
+                            console.log('处理普通消息:', data);
+                            addMessage(data.username, data.content, data.timestamp, data.username === username);
+                            break;
+                        case 'movie_message':
+                            addMovieMessage(data.username, data.content, data.iframe_src, data.iframe_width, data.iframe_height, data.timestamp, data.username === username);
+                            break;
+                        case 'ai_message':
+                            addMessage(data.username, data.content, data.timestamp, false);
+                            // 检查是否是天气信息回复（系统用户或张兵用户）
+                            if ((data.username === '系统' || data.username === '张兵') && (data.content.includes('天气') || data.content.includes('晴') || data.content.includes('雨') || data.content.includes('阴'))) {
+                                updateBackgroundByWeather(data.content);
+                            }
+                            break;
+                        case 'music_message':
+                            addMusicMessage(data.username, data.content, data.music_info, data.timestamp, data.username === username);
+                            break;
+                        case 'system_message':
+                            console.log('处理系统消息:', data);
+                            if (data.news_list) {
+                                // 确保news_list是数组格式
+                                const newsList = Array.isArray(data.news_list) ? data.news_list : [];
+                                addNewsMessage(data.username || '系统', data.content || '', newsList, data.timestamp);
+                            } else if (data.newsList) {
+                                // 兼容newsList格式
+                                const newsList = Array.isArray(data.newsList) ? data.newsList : [];
+                                addNewsMessage(data.username || '系统', data.content || '', newsList, data.timestamp);
+                            } else {
+                                addMessage(data.username, data.content, data.timestamp, false);
+                            }
+                            break;
+                        case 'news_pdf_message':
+                            console.log('处理新闻PDF消息:', data);
+                            // 首先添加文字版新闻列表
+                            const newsList = Array.isArray(data.news_list) ? data.news_list : [];
+                            addNewsMessage(data.username || '系统', data.content || '', newsList, data.timestamp);
+                            // 如果有PDF文件，添加PDF预览或下载链接
+                            if (data.pdf_filename) {
+                                addPdfMessage(data.username || '系统', data.pdf_filename, data.timestamp);
+                            }
+                            break;
+                        case 'user_joined':
+                        case 'user_left':
+                            addSystemMessage(data.message);
+                            updateUserList(data.online_users);
+                            break;
+                        case 'special_command':
+                            showNotification(data.message, 'info');
+                            break;
+                        }
+                    } catch (error) {
+                        console.error('解析WebSocket消息失败:', error, event.data);
+                    }
+                };
+                
+                ws.onclose = function() {
+                    console.log('WebSocket连接已关闭');
+                    showNotification('连接已断开，正在重新连接...', 'error');
+                    setTimeout(connectWebSocket, 3000);
+                };
+                
+                ws.onerror = function(error) {
+                    console.error('WebSocket错误:', error);
+                    showNotification('连接错误，请检查服务器是否在线', 'error');
+                };
+            }
+            
+            // 添加消息到聊天区域
+            function addMessage(username, content, timestamp, isOwn) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${isOwn ? 'own' : 'other'}`;
+                
+                const messageInfo = document.createElement('div');
+                messageInfo.className = 'message-info';
+                
+                const usernameSpan = document.createElement('span');
+                usernameSpan.className = 'message-username';
+                usernameSpan.textContent = username;
+                
+                const timeSpan = document.createElement('span');
+                timeSpan.className = 'message-time';
+                timeSpan.textContent = timestamp;
+                
+                messageInfo.appendChild(usernameSpan);
+                messageInfo.appendChild(timeSpan);
+                
+                const messageContent = document.createElement('div');
+                messageContent.className = 'message-content';
+                messageContent.textContent = content;
+                
+                messageDiv.appendChild(messageInfo);
+                messageDiv.appendChild(messageContent);
+                
+                messageContainer.appendChild(messageDiv);
+                messageContainer.scrollTop = messageContainer.scrollHeight;
+            }
+            
+            // 添加电影消息（包含iframe）
+            function addMovieMessage(username, content, iframeSrc, iframeWidth, iframeHeight, timestamp, isOwn) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${isOwn ? 'own' : 'other'}`;
+                
+                const messageInfo = document.createElement('div');
+                messageInfo.className = 'message-info';
+                
+                const usernameSpan = document.createElement('span');
+                usernameSpan.className = 'message-username';
+                usernameSpan.textContent = username;
+                
+                const timeSpan = document.createElement('span');
+                timeSpan.className = 'message-time';
+                timeSpan.textContent = timestamp;
+                
+                messageInfo.appendChild(usernameSpan);
+                messageInfo.appendChild(timeSpan);
+                
+                const messageContent = document.createElement('div');
+                messageContent.className = 'message-content';
+                messageContent.textContent = content;
+                
+                // 创建视频容器
+                const videoContainer = document.createElement('div');
+                videoContainer.className = 'video-container';
+                
+                // 创建iframe
+                const iframe = document.createElement('iframe');
+                iframe.src = iframeSrc;
+                iframe.width = iframeWidth || 400; // 使用服务器指定的宽度，默认为400
+                iframe.height = iframeHeight || 400; // 使用服务器指定的高度，默认为400
+                iframe.frameBorder = '0';
+                iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+                iframe.allowFullscreen = true;
+                
+                videoContainer.appendChild(iframe);
+                
+                messageDiv.appendChild(messageInfo);
+                messageDiv.appendChild(messageContent);
+                messageDiv.appendChild(videoContainer);
+                
+                messageContainer.appendChild(messageDiv);
+                messageContainer.scrollTop = messageContainer.scrollHeight;
+            }
+            
+            // 添加系统消息
+            function addSystemMessage(message) {
+                const systemMessage = document.createElement('div');
+                systemMessage.className = 'system-message';
+                systemMessage.textContent = message;
+                
+                messageContainer.appendChild(systemMessage);
+                messageContainer.scrollTop = messageContainer.scrollHeight;
+            }
+            
+            // 添加新闻消息卡片
+            function addNewsMessage(username, content, newsList, timestamp) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message news-message';
+                
+                const messageInfo = document.createElement('div');
+                messageInfo.className = 'message-info';
+                
+                const usernameSpan = document.createElement('span');
+                usernameSpan.className = 'message-username';
+                usernameSpan.textContent = username;
+                
+                const timeSpan = document.createElement('span');
+                timeSpan.className = 'message-time';
+                timeSpan.textContent = timestamp;
+                
+                messageInfo.appendChild(usernameSpan);
+                messageInfo.appendChild(timeSpan);
+                
+                // 创建新闻卡片容器
+                const newsCard = document.createElement('div');
+                newsCard.className = 'news-card';
+                
+                // 卡片标题
+                const cardHeader = document.createElement('div');
+                cardHeader.className = 'news-card-header';
+                cardHeader.innerHTML = '<h3>📰 百度热搜榜（前十条）</h3>';
+                
+                // 新闻列表容器
+                const newsListContainer = document.createElement('div');
+                newsListContainer.className = 'news-list';
+                
+                // 添加每条新闻
+                newsList.forEach(news => {
+                    const newsItem = document.createElement('div');
+                    newsItem.className = 'news-item';
+                    
+                    // 排名
+                    const rankSpan = document.createElement('span');
+                    rankSpan.className = 'news-rank';
+                    rankSpan.textContent = news.rank;
+                    
+                    // 标题
+                    const titleSpan = document.createElement('span');
+                    titleSpan.className = 'news-title';
+                    titleSpan.textContent = news.title;
+                    
+                    // 热度
+                    const heatSpan = document.createElement('span');
+                    heatSpan.className = 'news-heat';
+                    heatSpan.textContent = news.heat ? ` ${news.heat}` : '';
+                    
+                    newsItem.appendChild(rankSpan);
+                    newsItem.appendChild(titleSpan);
+                    newsItem.appendChild(heatSpan);
+                    newsListContainer.appendChild(newsItem);
+                });
+                
+                // 组装卡片
+                newsCard.appendChild(cardHeader);
+                newsCard.appendChild(newsListContainer);
+                
+                // 添加到消息容器
+                messageDiv.appendChild(messageInfo);
+                messageDiv.appendChild(newsCard);
+                
+                messageContainer.appendChild(messageDiv);
+                messageContainer.scrollTop = messageContainer.scrollHeight;
+            }
+            
+            // 添加PDF消息
+            function addPdfMessage(username, pdfFilename, timestamp) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message pdf-message';
+                
+                const messageInfo = document.createElement('div');
+                messageInfo.className = 'message-info';
+                
+                const usernameSpan = document.createElement('span');
+                usernameSpan.className = 'message-username';
+                usernameSpan.textContent = username;
+                
+                const timeSpan = document.createElement('span');
+                timeSpan.className = 'message-time';
+                timeSpan.textContent = timestamp;
+                
+                messageInfo.appendChild(usernameSpan);
+                messageInfo.appendChild(timeSpan);
+                
+                // 创建PDF下载卡片
+                const pdfCard = document.createElement('div');
+                pdfCard.className = 'pdf-card';
+                
+                // PDF标题
+                const pdfHeader = document.createElement('div');
+                pdfHeader.className = 'pdf-card-header';
+                pdfHeader.innerHTML = '<h3>📄 新闻PDF文档</h3>';
+                
+                // PDF内容区域
+                const pdfContent = document.createElement('div');
+                pdfContent.className = 'pdf-content';
+                
+                // 创建下载链接
+                const downloadLink = document.createElement('a');
+                downloadLink.href = `/pdf_news/${pdfFilename}`;  // 假设PDF文件放在服务器的pdf_news目录下
+                downloadLink.target = '_blank';
+                downloadLink.className = 'pdf-download-link';
+                downloadLink.textContent = `下载PDF: ${pdfFilename}`;
+                
+                // 添加图标
+                const downloadIcon = document.createElement('span');
+                downloadIcon.className = 'pdf-download-icon';
+                downloadIcon.textContent = '📥';
+                downloadLink.prepend(downloadIcon);
+                downloadLink.prepend(' ');
+                
+                pdfContent.appendChild(downloadLink);
+                
+                // 添加PDF预览提示
+                const previewHint = document.createElement('p');
+                previewHint.className = 'pdf-preview-hint';
+                previewHint.textContent = '点击链接下载或查看PDF文档';
+                
+                pdfContent.appendChild(previewHint);
+                
+                // 组装PDF卡片
+                pdfCard.appendChild(pdfHeader);
+                pdfCard.appendChild(pdfContent);
+                
+                // 添加到消息容器
+                messageDiv.appendChild(messageInfo);
+                messageDiv.appendChild(pdfCard);
+                
+                messageContainer.appendChild(messageDiv);
+                messageContainer.scrollTop = messageContainer.scrollHeight;
+            }
+            
+            // 更新用户列表
+            function updateUserList(users) {
+                userList.innerHTML = '';
+                
+                users.forEach(user => {
+                    const userItem = document.createElement('div');
+                    userItem.className = 'user-item';
+                    
+                    const avatar = document.createElement('div');
+                    avatar.className = 'user-avatar';
+                    avatar.textContent = user.charAt(0).toUpperCase();
+                    
+                    const userInfo = document.createElement('div');
+                    userInfo.className = 'user-info';
+                    
+                    const userName = document.createElement('div');
+                    userName.className = 'user-name';
+                    userName.textContent = user;
+                    
+                    const userStatus = document.createElement('div');
+                    userStatus.className = 'user-status';
+                    userStatus.textContent = user === username ? '您' : '在线';
+                    
+                    userInfo.appendChild(userName);
+                    userInfo.appendChild(userStatus);
+                    
+                    const statusIndicator = document.createElement('div');
+                    statusIndicator.className = 'status-indicator';
+                    
+                    userItem.appendChild(avatar);
+                    userItem.appendChild(userInfo);
+                    userItem.appendChild(statusIndicator);
+                    
+                    userList.appendChild(userItem);
+                });
+            }
+            
+            // 添加音乐消息（包含音乐卡片）
+            function addMusicMessage(username, content, musicInfo, timestamp, isOwn) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${isOwn ? 'own' : 'other'}`;
+                
+                const messageInfo = document.createElement('div');
+                messageInfo.className = 'message-info';
+                
+                const usernameSpan = document.createElement('span');
+                usernameSpan.className = 'message-username';
+                usernameSpan.textContent = username;
+                
+                const timeSpan = document.createElement('span');
+                timeSpan.className = 'message-time';
+                timeSpan.textContent = timestamp;
+                
+                messageInfo.appendChild(usernameSpan);
+                messageInfo.appendChild(timeSpan);
+                
+                const messageContent = document.createElement('div');
+                messageContent.className = 'message-content';
+                messageContent.textContent = content;
+                
+                // 创建音乐卡片
+                const musicCard = document.createElement('div');
+                musicCard.className = 'music-card';
+                musicCard.style.minHeight = '100px'; // 设置最小高度防止空白过大
+                
+                // 添加封面图片
+                const coverImg = document.createElement('img');
+                coverImg.className = 'music-cover';
+                coverImg.src = musicInfo.image || 'https://via.placeholder.com/100x100?text=No+Cover';
+                coverImg.alt = `${musicInfo.name} - ${musicInfo.singer} 的封面`;
+                musicCard.appendChild(coverImg);
+                
+                // 添加音乐信息
+                const musicInfoDiv = document.createElement('div');
+                musicInfoDiv.className = 'music-info';
+                
+                const songName = document.createElement('div');
+                songName.className = 'music-name';
+                songName.textContent = musicInfo.name || '未知歌曲';
+                musicInfoDiv.appendChild(songName);
+                
+                const artistName = document.createElement('div');
+                artistName.className = 'music-artist';
+                artistName.textContent = musicInfo.singer || '未知歌手';
+                musicInfoDiv.appendChild(artistName);
+                
+                musicCard.appendChild(musicInfoDiv);
+                
+                // 添加播放控制按钮
+                const controlsDiv = document.createElement('div');
+                controlsDiv.className = 'music-controls';
+                
+                const playBtn = document.createElement('button');
+                playBtn.className = 'music-play-btn';
+                playBtn.innerHTML = '▶️';
+                playBtn.title = '播放';
+                
+                // 音频元素（默认隐藏）
+                const audio = document.createElement('audio');
+                
+                // 检查是否为VIP音乐
+                if (musicInfo.is_vip) {
+                    // VIP音乐处理
+                    playBtn.disabled = true;
+                    playBtn.title = '该音乐为vip歌曲无法播放';
+                    playBtn.innerHTML = '🔒';
+                    
+                    // 添加VIP提示标签
+                    const vipTag = document.createElement('div');
+                    vipTag.className = 'music-vip-tag';
+                    vipTag.textContent = '该音乐为vip歌曲无法播放';
+                    vipTag.style.color = '#ff0000';
+                    vipTag.style.fontSize = '12px';
+                    vipTag.style.marginTop = '5px';
+                    controlsDiv.appendChild(vipTag);
+                    
+                    console.log('VIP音乐，无法播放:', musicInfo);
+                } else {
+                    // 尝试多种可能的URL字段名称
+                    let audioUrl = musicInfo.url || musicInfo.mp3 || musicInfo.audio_url || musicInfo.file_url;
+                    
+                    // 如果有URL则设置，否则可以添加默认行为或提示
+                    if (audioUrl) {
+                        audio.src = audioUrl;
+                    } else {
+                        // 没有URL时，禁用播放按钮并显示提示
+                        playBtn.disabled = true;
+                        playBtn.title = '暂无播放链接';
+                        playBtn.innerHTML = '🔒';
+                        console.log('音乐信息中没有找到有效的音频URL:', musicInfo);
+                    }
+                }
+                
+                // 播放状态管理
+                let isPlaying = false;
+                
+                playBtn.addEventListener('click', function() {
+                    if (audio.src) {
+                        if (isPlaying) {
+                            audio.pause();
+                            playBtn.innerHTML = '▶️';
+                            playBtn.title = '播放';
+                        } else {
+                            // 暂停其他所有音乐播放
+                            document.querySelectorAll('.music-card audio').forEach(otherAudio => {
+                                if (otherAudio !== audio) {
+                                    otherAudio.pause();
+                                    const otherPlayBtn = otherAudio.parentElement.querySelector('.music-play-btn');
+                                    if (otherPlayBtn) {
+                                        otherPlayBtn.innerHTML = '▶️';
+                                        otherPlayBtn.title = '播放';
+                                    }
+                                }
+                            });
+                            
+                            audio.play()
+                                .then(() => {
+                                    playBtn.innerHTML = '⏸️';
+                                    playBtn.title = '暂停';
+                                    isPlaying = true;
+                                })
+                                .catch(error => {
+                                    console.error('播放失败:', error);
+                                    showNotification('音乐播放失败', 'error');
+                                });
+                        }
+                    } else {
+                        showNotification('暂无播放链接', 'info');
+                    }
+                });
+                
+                // 音频播放结束事件
+                audio.addEventListener('ended', function() {
+                    playBtn.innerHTML = '▶️';
+                    playBtn.title = '播放';
+                    isPlaying = false;
+                });
+                
+                controlsDiv.appendChild(playBtn);
+                controlsDiv.appendChild(audio);
+                musicCard.appendChild(controlsDiv);
+                
+                messageDiv.appendChild(messageInfo);
+                messageDiv.appendChild(messageContent);
+                messageDiv.appendChild(musicCard);
+                
+                messageContainer.appendChild(messageDiv);
+                messageContainer.scrollTop = messageContainer.scrollHeight;
+            }
+            
+            // 添加音乐卡片样式
+            function addMusicCardStyles() {
+                const style = document.createElement('style');
+                style.textContent = `
+                    .music-card {
+                        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+                        border-radius: 12px;
+                        padding: 15px;
+                        margin-top: 10px;
+                        display: flex;
+                        align-items: center;
+                        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                        transition: transform 0.2s ease, box-shadow 0.2s ease;
+                        overflow: hidden; /* 防止内容溢出 */
+                        max-width: 100%; /* 确保不会超出容器宽度 */
+                    }
+                    
+                    .music-card:hover {
+                        transform: translateY(-2px);
+                        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+                    }
+                    
+                    .music-cover {
+                        width: 80px;
+                        height: 80px;
+                        border-radius: 8px;
+                        object-fit: cover;
+                        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                        transition: transform 0.2s ease;
+                    }
+                    
+                    .music-card:hover .music-cover {
+                        transform: scale(1.05);
+                    }
+                    
+                    .music-info {
+                        flex: 1;
+                        margin: 0 15px;
+                    }
+                    
+                    .music-name {
+                        font-size: 16px;
+                        font-weight: 600;
+                        color: #2c3e50;
+                        margin-bottom: 5px;
+                    }
+                    
+                    .music-artist {
+                        font-size: 14px;
+                        color: #7f8c8d;
+                    }
+                    
+                    .music-controls {
+                        position: relative;
+                    }
+                    
+                    .music-play-btn {
+                        width: 40px;
+                        height: 40px;
+                        border-radius: 50%;
+                        border: none;
+                        background: white;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 16px;
+                        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                        transition: all 0.2s ease;
+                    }
+                    
+                    .music-play-btn:hover:not(:disabled) {
+                        transform: scale(1.1);
+                        background: #f8f9fa;
+                    }
+                    
+                    .music-play-btn:disabled {
+                        cursor: not-allowed;
+                        opacity: 0.6;
+                    }
+                    
+                    /* 移动端适配 */
+                    @media (max-width: 768px) {
+                        .music-card {
+                            flex-direction: column;
+                            text-align: center;
+                        }
+                        
+                        .music-cover {
+                            margin-bottom: 10px;
+                        }
+                        
+                        .music-info {
+                            margin: 10px 0;
+                        }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            // 初始化音乐卡片样式
+            addMusicCardStyles();
+            
+            // 显示通知
+            function showNotification(message, type = 'info') {
+                const notification = document.createElement('div');
+                notification.className = `notification ${type}`;
+                notification.textContent = message;
+                
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.style.opacity = '0';
+                    notification.style.transition = 'opacity 0.3s ease';
+                    setTimeout(() => {
+                        document.body.removeChild(notification);
+                    }, 300);
+                }, 3000);
+            }
+            
+            // 发送消息
+            function sendMessage() {
+                const content = messageInput.value.trim();
+                console.log('========================');
+                console.log('sendMessage函数被调用');
+                console.log('准备发送消息内容:', content);
+                console.log('当前用户名:', username);
+                console.log('WebSocket对象存在:', !!ws);
+                console.log('WebSocket状态:', ws ? ws.readyState : '未连接');
+                
+                if (!content) {
+                    console.log('消息内容为空，不发送');
+                    showNotification('消息内容不能为空', 'error');
+                    console.log('========================');
+                    return;
+                }
+                
+                if (!ws) {
+                    console.log('WebSocket未初始化');
+                    showNotification('WebSocket未连接，请刷新页面', 'error');
+                    console.log('========================');
+                    return;
+                }
+                
+                const stateDescription = ws.readyState === WebSocket.CONNECTING ? 'CONNECTING' : 
+                                       ws.readyState === WebSocket.OPEN ? 'OPEN' :
+                                       ws.readyState === WebSocket.CLOSING ? 'CLOSING' :
+                                       ws.readyState === WebSocket.CLOSED ? 'CLOSED' : 'UNKNOWN';
+                console.log('WebSocket状态码:', ws.readyState, '状态描述:', stateDescription);
+                
+                if (ws.readyState !== WebSocket.OPEN) {
+                    console.log('WebSocket未连接，无法发送消息');
+                    showNotification('WebSocket连接已断开，请等待重新连接...', 'error');
+                    console.log('========================');
+                    return;
+                }
+                
+                const messageData = {
+                    type: 'message',
+                    content: content
+                };
+                
+                const messageJson = JSON.stringify(messageData);
+                console.log('最终发送的消息数据:', messageData);
+                console.log('序列化后的消息:', messageJson);
+                
+                try {
+                    // 发送消息
+                    ws.send(messageJson);
+                    console.log('消息发送成功，等待服务器广播');
+                } catch (error) {
+                    console.error('消息发送失败:', error);
+                    showNotification('消息发送失败', 'error');
+                    console.log('========================');
+                    return;
+                }
+                
+                // 清空输入框
+                messageInput.value = '';
+                messageInput.style.height = '44px';
+                console.log('输入框已清空，高度重置');
+                console.log('========================');
+            }
+            
+            // 初始化@提示面板样式
+            function initAtSuggestions() {
+                const style = document.createElement('style');
+                style.textContent = `
+                    .at-suggestions {
+                        position: absolute;
+                        top: 100%;
+                        left: 0;
+                        right: 0;
+                        background: white;
+                        border: 1px solid #e1e5ee;
+                        border-radius: 8px;
+                        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                        max-height: 200px;
+                        overflow-y: auto;
+                        display: none;
+                        z-index: 100;
+                        margin-top: 4px;
+                    }
+                    
+                    .message-input-container {
+                        position: relative;
+                        flex: 1;
+                        display: flex;
+                        flex-direction: column;
+                    }
+                    
+                    .at-suggestion-item {
+                        padding: 10px 15px;
+                        cursor: pointer;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        transition: background 0.2s;
+                    }
+                    
+                    .at-suggestion-item:hover {
+                        background: #f5f7fa;
+                    }
+                    
+                    .at-suggestion-item.selected {
+                        background: #e3f2fd;
+                    }
+                    
+                    .at-command {
+                        font-weight: 600;
+                        color: #4a90e2;
+                    }
+                    
+                    .at-description {
+                        font-size: 13px;
+                        color: #7f8c8d;
+                    }
+                    
+                    .input-area {
+                        position: relative;
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            // 渲染@提示面板
+            function renderAtSuggestions() {
+                atSuggestions.innerHTML = '';
+                
+                atCommands.forEach(cmd => {
+                    const item = document.createElement('div');
+                    item.className = 'at-suggestion-item';
+                    
+                    const commandSpan = document.createElement('span');
+                    commandSpan.className = 'at-command';
+                    commandSpan.textContent = cmd.command;
+                    
+                    const descriptionSpan = document.createElement('span');
+                    descriptionSpan.className = 'at-description';
+                    descriptionSpan.textContent = cmd.description;
+                    
+                    item.appendChild(commandSpan);
+                    item.appendChild(descriptionSpan);
+                    
+                    // 添加点击事件
+                    item.addEventListener('click', () => {
+                        // 获取当前光标位置
+                        const start = messageInput.selectionStart;
+                        const end = messageInput.selectionEnd;
+                        
+                        // 查找@字符的位置
+                        const text = messageInput.value;
+                        let atPos = -1;
+                        for (let i = start - 1; i >= 0; i--) {
+                            if (text[i] === '@') {
+                                atPos = i;
+                                break;
+                            }
+                            // 如果遇到空格或其他非字母数字字符，停止查找
+                            if (/\s/.test(text[i])) {
+                                break;
+                            }
+                        }
+                        
+                        // 替换@及后面的内容为选择的命令
+                        if (atPos !== -1) {
+                            messageInput.value = text.substring(0, atPos) + cmd.command + ' ';
+                        } else {
+                            messageInput.value += cmd.command + ' ';
+                        }
+                        
+                        // 隐藏提示面板
+                        atSuggestions.style.display = 'none';
+                        
+                        // 聚焦到输入框并移动光标到末尾
+                        messageInput.focus();
+                        messageInput.selectionStart = messageInput.selectionEnd = messageInput.value.length;
+                    });
+                    
+                    atSuggestions.appendChild(item);
+                });
+            }
+            
+            // 检查是否需要显示@提示面板
+            function checkAtSuggestions() {
+                const text = messageInput.value;
+                const cursorPos = messageInput.selectionStart;
+                
+                // 检查光标前是否有@字符
+                for (let i = cursorPos - 1; i >= 0; i--) {
+                    if (text[i] === '@') {
+                        // 检查@前面是否是空格或在开头
+                        if (i === 0 || /\s/.test(text[i - 1])) {
+                            // 显示提示面板
+                            atSuggestions.style.display = 'block';
+                        } else {
+                            atSuggestions.style.display = 'none';
+                        }
+                        return;
+                    }
+                    // 如果遇到空格，停止查找
+                    if (/\s/.test(text[i])) {
+                        break;
+                    }
+                }
+                
+                // 如果没有找到@，隐藏提示面板
+                atSuggestions.style.display = 'none';
+            }
+            
+            // 初始化@提示功能
+            initAtSuggestions();
+            renderAtSuggestions();
+            
+            // 事件监听器
+            sendBtn.addEventListener('click', sendMessage);
+            
+            messageInput.addEventListener('input', function() {
+                checkAtSuggestions();
+                // 自动调整输入框高度
+                this.style.height = '44px';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+            
+            messageInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+                
+                // 处理方向键选择提示项
+                if (atSuggestions.style.display === 'block') {
+                    const items = atSuggestions.querySelectorAll('.at-suggestion-item');
+                    let selectedIndex = -1;
+                    
+                    // 找到当前选中的项
+                    for (let i = 0; i < items.length; i++) {
+                        if (items[i].classList.contains('selected')) {
+                            selectedIndex = i;
+                            break;
+                        }
+                    }
+                    
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        // 移除之前的选中状态
+                        if (selectedIndex !== -1) {
+                            items[selectedIndex].classList.remove('selected');
+                        }
+                        // 选中下一项或第一项
+                        const newIndex = selectedIndex === -1 || selectedIndex === items.length - 1 ? 0 : selectedIndex + 1;
+                        items[newIndex].classList.add('selected');
+                        // 滚动到可见区域
+                        items[newIndex].scrollIntoView({ block: 'nearest' });
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        // 移除之前的选中状态
+                        if (selectedIndex !== -1) {
+                            items[selectedIndex].classList.remove('selected');
+                        }
+                        // 选中上一项或最后一项
+                        const newIndex = selectedIndex === -1 || selectedIndex === 0 ? items.length - 1 : selectedIndex - 1;
+                        items[newIndex].classList.add('selected');
+                        // 滚动到可见区域
+                        items[newIndex].scrollIntoView({ block: 'nearest' });
+                    } else if (e.key === 'Tab') {
+                        e.preventDefault();
+                        // 选择当前高亮的项或第一项
+                        const selectedItem = selectedIndex !== -1 ? items[selectedIndex] : items[0];
+                        if (selectedItem) {
+                            selectedItem.click();
+                        }
+                    }
+                }
+            });
+            
+            messageInput.addEventListener('click', checkAtSuggestions);
+            messageInput.addEventListener('blur', function() {
+                // 延迟隐藏，以便点击提示项时能触发事件
+                setTimeout(() => {
+                    atSuggestions.style.display = 'none';
+                }, 200);
+            });
+            
+            messageInput.addEventListener('focus', checkAtSuggestions);
+            
+            logoutBtn.addEventListener('click', function() {
+                if (ws) {
+                    ws.close();
+                }
+                localStorage.clear();
+                window.location.href = '/';
+            });
+            
+            emojiBtn.addEventListener('click', function() {
+                emojiPanel.classList.toggle('show');
+            });
+            
+            // 机器人按钮点击事件 - 添加@张兵
+            document.getElementById('robot-btn').addEventListener('click', function() {
+                messageInput.value += '@张兵 ';
+                messageInput.focus();
+                // 自动调整输入框高度
+                messageInput.style.height = '44px';
+                messageInput.style.height = (messageInput.scrollHeight) + 'px';
+            });
+            
+            // 电影按钮点击事件 - 添加@电影
+            movieBtn.addEventListener('click', function() {
+                messageInput.value += '@电影 ';
+                messageInput.focus();
+            });
+            
+            // 新闻按钮点击事件 - 添加@新闻
+            newsBtn.addEventListener('click', function() {
+                messageInput.value += '@新闻 ';
+                messageInput.focus();
+            });
+            
+            // 天气按钮点击事件 - 添加@天气
+            weatherBtn.addEventListener('click', function() {
+                messageInput.value += '@天气 ';
+                messageInput.focus();
+            });
+            
+            // 音乐按钮点击事件 - 添加@音乐
+            musicBtn.addEventListener('click', function() {
+                messageInput.value += '@音乐 ';
+                messageInput.focus();
+                // 自动调整输入框高度
+                messageInput.style.height = '44px';
+                messageInput.style.height = (messageInput.scrollHeight) + 'px';
+            });
+            
+            menuToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('show');
+            });
+            
+            // 点击其他地方关闭表情面板
+            document.addEventListener('click', function(e) {
+                if (!emojiBtn.contains(e.target) && !emojiPanel.contains(e.target)) {
+                    emojiPanel.classList.remove('show');
+                }
+            });
+            
+            // 根据天气设置背景颜色（支持英文天气状态）
+            function updateBackgroundByWeather(weather) {
+                const messageContainer = document.getElementById('message-container');
+                // 添加平滑过渡效果
+                messageContainer.style.transition = 'background 1s ease';
+                
+                // 转为小写以进行不区分大小写的匹配
+                const weatherLower = weather.toLowerCase();
+                
+                // 晴天 - 不同强度的橙色 (Sunny)
+                if (weatherLower.includes('sunny')) {
+                    if (weatherLower.includes('partly sunny') || weatherLower.includes('mostly sunny')) {
+                        messageContainer.style.background = '#ffe0b2'; // 中等橙色背景
+                    } else {
+                        messageContainer.style.background = '#ffcc80'; // 鲜艳的橙色背景
+                    }
+                }
+                // 多云 - 淡灰色 (Cloudy, Overcast)
+                else if (weatherLower.includes('cloudy') || weatherLower.includes('overcast')) {
+                    messageContainer.style.background = '#f0f0f0'; // 淡灰色背景
+                }
+                // 雨天 - 不同强度的蓝色 (Rain, Shower)
+                else if (weatherLower.includes('rain') || weatherLower.includes('shower')) {
+                    if (weatherLower.includes('light rain')) {
+                        messageContainer.style.background = '#e3f2fd'; // 浅蓝色背景
+                    } else if (weatherLower.includes('moderate rain')) {
+                        messageContainer.style.background = '#90caf9'; // 中蓝色背景
+                    } else if (weatherLower.includes('heavy rain') || weatherLower.includes('storm')) {
+                        messageContainer.style.background = '#42a5f5'; // 深蓝色背景
+                    } else {
+                        messageContainer.style.background = '#bbdefb'; // 一般性雨的背景
+                    }
+                }
+                // 雪天 - 不同强度的浅蓝色带白 (Snow)
+                else if (weatherLower.includes('snow')) {
+                    if (weatherLower.includes('light snow')) {
+                        messageContainer.style.background = '#f5fefe'; // 几乎白色的背景
+                    } else if (weatherLower.includes('moderate snow')) {
+                        messageContainer.style.background = '#e1f5fe'; // 浅蓝色带白
+                    } else if (weatherLower.includes('heavy snow') || weatherLower.includes('blizzard')) {
+                        messageContainer.style.background = '#b3e5fc'; // 较深的浅蓝色带白
+                    }
+                }
+                // 雾霾等其他天气 - 浅灰色 (Fog, Mist, Haze, Dust, Sand)
+                else if (weatherLower.includes('fog') || weatherLower.includes('mist') || weatherLower.includes('haze') || weatherLower.includes('dust') || weatherLower.includes('sand')) {
+                    messageContainer.style.background = '#eceff1'; // 淡灰色背景
+                }
+                // 雷暴 - 深蓝色 (Thunderstorm)
+                else if (weatherLower.includes('thunder') || weatherLower.includes('thunderstorm')) {
+                    messageContainer.style.background = '#3949ab'; // 深蓝色背景
+                }
+                // 风 - 浅蓝色 (Windy)
+                else if (weatherLower.includes('windy')) {
+                    messageContainer.style.background = '#e3f2fd'; // 浅蓝色背景
+                }
+                // 保持中文天气支持的兼容性
+                else if (weather.includes('晴')) {
+                    messageContainer.style.background = '#ffcc80'; // 鲜艳的橙色背景
+                }
+                else if (weather.includes('阴') || weather.includes('多云')) {
+                    messageContainer.style.background = '#f0f0f0'; // 淡灰色背景
+                }
+                else if (weather.includes('雨')) {
+                    messageContainer.style.background = '#bbdefb'; // 一般性雨的背景
+                }
+                else if (weather.includes('雪')) {
+                    messageContainer.style.background = '#e1f5fe'; // 浅蓝色带白
+                }
+                else if (weather.includes('雾') || weather.includes('霾') || weather.includes('沙尘')) {
+                    messageContainer.style.background = '#eceff1'; // 淡灰色背景
+                }
+                // 其他天气 - 默认背景
+                else {
+                    messageContainer.style.background = '#f8f9fa'; // 默认浅灰色背景
+                }
+            }
+            
+            // 天气背景颜色更新功能已合并到WebSocket的onmessage事件监听器中
+            
+            // 初始设置默认背景
+            document.getElementById('message-container').style.background = '#f8f9fa';
+            
+            // 历史消息相关变量和函数
+            const historyBtn = document.getElementById('historyBtn');
+            const historyPanel = document.getElementById('historyPanel');
+            const historyClose = document.getElementById('historyClose');
+            const historyContainer = document.getElementById('historyContainer');
+            const historySearch = document.getElementById('historySearch');
+            const historyUserFilter = document.getElementById('historyUserFilter');
+            const loadMoreHistory = document.getElementById('loadMoreHistory');
+            
+            let historyPage = 0;
+            const historyLimit = 50;
+            let hasMoreHistory = true;
+            let historyUsers = new Set();
+            
+            // 加载历史消息
+            function loadHistoryMessages(page = 0, search = '', username = '') {
+                // 显示加载中消息（仅在第一页时）
+                if (page === 0) {
+                    historyContainer.innerHTML = '<div class="loading-message">加载历史消息中...</div>';
+                }
+                
+                // 构建请求参数
+                const params = new URLSearchParams({
+                    page: page,
+                    limit: historyLimit
+                });
+                
+                if (search) {
+                    params.append('search', search);
+                }
+                
+                if (username) {
+                    params.append('username', username);
+                }
+                
+                // 发送请求获取历史消息
+                fetch(`/api/history?${params.toString()}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('获取历史消息失败');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        // 更新是否有更多消息
+                        hasMoreHistory = data.messages.length === historyLimit;
+                        loadMoreHistory.disabled = !hasMoreHistory;
+                        
+                        // 更新用户过滤选项
+                        data.messages.forEach(message => {
+                            if (message.type !== 'system' && !historyUsers.has(message.username)) {
+                                historyUsers.add(message.username);
+                                const option = document.createElement('option');
+                                option.value = message.username;
+                                option.textContent = message.username;
+                                historyUserFilter.appendChild(option);
+                            }
+                        });
+                        
+                        // 显示消息（仅在第一页时清空容器）
+                        if (page === 0) {
+                            historyContainer.innerHTML = '';
+                        }
+                        
+                        // 添加消息到历史面板
+                        data.messages.forEach(message => {
+                            const messageDiv = document.createElement('div');
+                            
+                            if (message.type === 'system') {
+                                messageDiv.className = 'history-message-system';
+                                const systemContent = document.createElement('div');
+                                systemContent.className = 'system-content';
+                                systemContent.textContent = message.content;
+                                messageDiv.appendChild(systemContent);
+                            } else {
+                                messageDiv.className = 'history-message';
+                                
+                                const messageHeader = document.createElement('div');
+                                messageHeader.className = 'history-message-header';
+                                
+                                const usernameSpan = document.createElement('span');
+                                usernameSpan.className = 'history-message-username';
+                                usernameSpan.textContent = message.username;
+                                
+                                const timeSpan = document.createElement('span');
+                                timeSpan.className = 'history-message-time';
+                                timeSpan.textContent = message.timestamp;
+                                
+                                messageHeader.appendChild(usernameSpan);
+                                messageHeader.appendChild(timeSpan);
+                                
+                                const messageContent = document.createElement('div');
+                                messageContent.className = 'history-message-content';
+                                messageContent.textContent = message.content;
+                                
+                                // 特殊处理电影消息和AI消息
+                                if (message.type === 'movie_message') {
+                                    const movieContainer = document.createElement('div');
+                                    movieContainer.className = 'video-container';
+                                    movieContainer.style.marginTop = '10px';
+                                    movieContainer.style.maxWidth = '300px';
+                                    
+                                    const iframe = document.createElement('iframe');
+                                    iframe.src = message.iframe_src;
+                                    iframe.width = message.iframe_width || 300;
+                                    iframe.height = message.iframe_height || 200;
+                                    iframe.frameBorder = '0';
+                                    iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+                                    iframe.allowFullscreen = true;
+                                    
+                                    movieContainer.appendChild(iframe);
+                                    messageDiv.appendChild(messageHeader);
+                                    messageDiv.appendChild(messageContent);
+                                    messageDiv.appendChild(movieContainer);
+                                } else {
+                                    messageDiv.appendChild(messageHeader);
+                                    messageDiv.appendChild(messageContent);
+                                }
+                            }
+                            
+                            historyContainer.appendChild(messageDiv);
+                        });
+                        
+                        // 如果没有消息，显示空状态
+                        if (data.messages.length === 0 && page === 0) {
+                            historyContainer.innerHTML = '<div class="no-messages">暂无历史消息</div>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('加载历史消息出错:', error);
+                        historyContainer.innerHTML = '<div class="loading-message">加载失败，请重试</div>';
+                        showNotification('加载历史消息失败', 'error');
+                    });
+            }
+            
+            // 切换历史面板显示
+            function toggleHistoryPanel() {
+                historyPanel.classList.toggle('show');
+                
+                // 如果显示面板且是首次打开，加载历史消息
+                if (historyPanel.classList.contains('show')) {
+                    historyPage = 0;
+                    loadHistoryMessages(historyPage);
+                }
+            }
+            
+            // 关闭历史面板
+            function closeHistoryPanel() {
+                historyPanel.classList.remove('show');
+            }
+            
+            // 加载更多历史消息
+            function loadMoreMessages() {
+                if (hasMoreHistory) {
+                    historyPage++;
+                    loadHistoryMessages(historyPage, historySearch.value, historyUserFilter.value);
+                }
+            }
+            
+            // 刷新历史消息（应用过滤条件）
+            function refreshHistoryMessages() {
+                // 防抖处理
+                clearTimeout(this.refreshTimeout);
+                this.refreshTimeout = setTimeout(() => {
+                    historyPage = 0;
+                    loadHistoryMessages(historyPage, historySearch.value, historyUserFilter.value);
+                }, 300);
+            }
+            
+            // 历史消息事件监听器
+            historyBtn.addEventListener('click', toggleHistoryPanel);
+            historyClose.addEventListener('click', closeHistoryPanel);
+            loadMoreHistory.addEventListener('click', loadMoreMessages);
+            historySearch.addEventListener('input', refreshHistoryMessages);
+            historySearch.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    historyPage = 0;
+                    loadHistoryMessages(historyPage, this.value, historyUserFilter.value);
+                }
+            });
+            historyUserFilter.addEventListener('change', function() {
+                historyPage = 0;
+                loadHistoryMessages(historyPage, historySearch.value, this.value);
+            });
+            
+            // 初始化连接
+            connectWebSocket();
+        });
+    </script>
+</body>
+</html>
